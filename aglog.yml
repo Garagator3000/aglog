@@ -1,0 +1,22 @@
+---
+log:
+  level: debug
+  show_source: false
+  format: text
+
+server:
+  ip: 0.0.0.0
+  port: 9900
+
+loki:
+  server: http://127.0.0.1:3100
+  timeout: 10s
+
+storage:
+  log_lifetime: 14d
+  path_to_storage: ./storage
+
+messages:
+  formats:
+    - '.*(?P<priority>\d+)>(?P<version>\d) (?P<timestamp>[^\s]+) (?P<hostname>[^\s]+) (?P<appname>[^\s]+) (?P<pid>\d+) (?P<level>[^\s]+) (?P<text>.*)'
+
