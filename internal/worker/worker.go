@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// Listen log messages from the all servers and send them to queue.
 func ListenMessages(
 	ctx context.Context,
 	srv []server.Server,
@@ -18,9 +19,10 @@ func ListenMessages(
 ) {
 	messageChan := make(chan string, 1024)
 
+	// Startring all servers.
 	for _, s := range srv {
 		s.Start()
-		logger.Info("server listening", log.String("address", s.GetAddr()))
+		logger.Info("server listening", log.String("address", s.GetAddr()), log.String("protocol", s.GetProto()))
 		go s.Listen(ctx, messageChan)
 	}
 
@@ -35,6 +37,7 @@ func ListenMessages(
 	}
 }
 
+// Handle the log messages from the queue.
 func Work(
 	ctx context.Context,
 	lokiClient *loki.Client,
@@ -53,6 +56,7 @@ func Work(
 	}
 }
 
+// Handle one log message from queue.
 func handleLog(
 	lokiClient *loki.Client,
 	messageQueue queue.Queue,
@@ -66,7 +70,7 @@ func handleLog(
 
 	labels := make(map[string]string)
 
-	err := parseLog(labels, message, logger, formats)
+	err := parseLog(labels, message, formats)
 	if err != nil {
 		logger.Error("failed to parse log", log.Error(err))
 		return
@@ -83,27 +87,26 @@ func handleLog(
 	}
 }
 
-func parseLog(labels map[string]string, logMessage string, logger log.Logger, formats map[string]*regexp.Regexp) error {
-	var subexpNames []string
-	var matches []string
-
+// Add labels for Loki from log message by regex pattern.
+func parseLog(labels map[string]string, logMessage string, formats map[string]*regexp.Regexp) error {
 	for _, re := range formats {
-		matches = re.FindStringSubmatch(logMessage)
-		if len(matches) > 0 {
-			subexpNames = re.SubexpNames()
-			break
+		if !re.MatchString(logMessage) {
+			continue
 		}
-	}
 
-	if len(matches) == 0 {
-		logger.Debug("no match regex found", log.String("log", logMessage))
+		subexpNames := re.SubexpNames()
+		matches := re.FindStringSubmatch(logMessage)
+
+		if len(matches) != len(subexpNames)+1 {
+			continue
+		}
+
+		for i, name := range subexpNames {
+			if i != 0 && name != "" {
+				labels[name] = matches[i]
+			}
+		}
 		return nil
-	}
-
-	for i, name := range subexpNames {
-		if i != 0 && name != "" {
-			labels[name] = matches[i]
-		}
 	}
 
 	return nil

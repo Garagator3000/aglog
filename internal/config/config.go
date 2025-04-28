@@ -16,8 +16,20 @@ type Config struct {
 }
 
 type Server struct {
-	IP   string `yaml:"ip" env:"IP" envDefault:"0.0.0.0"`
-	Port int    `yaml:"port" env:"PORT" envDefault:"1500"`
+	UDP UDP `yaml:"udp"`
+	TCP TCP `yaml:"tcp"`
+}
+
+type UDP struct {
+	Enabled bool   `yaml:"enabled" env:"UDP_ENABLED" envDefault:"false"`
+	IP      string `yaml:"ip" env:"UDP_IP" envDefault:"0.0.0.0"`
+	Port    int    `yaml:"port" env:"UDP_PORT" envDefault:"1514"`
+}
+
+type TCP struct {
+	Enabled bool   `yaml:"enabled" env:"TCP_ENABLED" envDefault:"false"`
+	IP      string `yaml:"ip" env:"TCP_IP" envDefault:"0.0.0.0"`
+	Port    int    `yaml:"port" env:"TCP_PORT" envDefault:"1514"`
 }
 
 type Log struct {
@@ -33,7 +45,7 @@ type Loki struct {
 
 type Storage struct {
 	LogLifetime   string `yaml:"log_lifetime" env:"LOG_LIFETIME" envDefault:"14d"`
-	PathToStorage string `yaml:"path_to_storage" env:"PATH_TO_STORAGE" envDefault:"./storage"`
+	PathToStorage string `yaml:"path_to_storage" env:"PATH_TO_STORAGE" envDefault:"./aglog.db"`
 }
 
 type Messages struct {

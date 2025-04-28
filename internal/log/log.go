@@ -11,18 +11,20 @@ type Logger interface {
 	Error(string, ...any)
 }
 
+type logParamsCallback func(params *logParams)
+
 type Log struct {
 	logger *slog.Logger
 }
 
-func NewLog(opts ...func(params *logParams)) *Log {
+func NewLog(opts ...logParamsCallback) *Log {
 	params := defaultParams()
 
 	for _, opt := range opts {
 		opt(&params)
 	}
 
-	handlerOptions := newHandlerOptions(params.level, params.showSource)
+	handlerOptions := newHandlerOptions(params.level)
 	handler := newHandler(params.format, handlerOptions)
 
 	return &Log{

@@ -27,6 +27,10 @@ func (u *UDP) GetAddr() string {
 	return u.ip + u.port
 }
 
+func (u *UDP) GetProto() string {
+	return "udp"
+}
+
 func (u *UDP) Start() {
 	addr, err := net.ResolveUDPAddr("udp", u.ip+u.port)
 	if err != nil {
@@ -42,8 +46,8 @@ func (u *UDP) Start() {
 }
 
 func (u *UDP) Stop() {
-	err := u.Connection.Close()
-	if err != nil {
+	u.logger.Info("stopping UDP server...")
+	if err := u.Connection.Close(); err != nil {
 		u.logger.Error("failed to close udp connection", log.Error(err))
 	}
 }

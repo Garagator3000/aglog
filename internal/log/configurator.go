@@ -6,15 +6,8 @@ import (
 )
 
 type logParams struct {
-	level      slog.Level
-	showSource bool
-	format     string
-}
-
-func WithShowSource(showSource bool) func(p *logParams) {
-	return func(p *logParams) {
-		p.showSource = showSource
-	}
+	level  slog.Level
+	format string
 }
 
 func WithLevel(level string) func(p *logParams) {
@@ -31,16 +24,15 @@ func WithFormat(format string) func(p *logParams) {
 
 func defaultParams() logParams {
 	return logParams{
-		level:      slog.LevelInfo,
-		showSource: false,
-		format:     "json",
+		level:  slog.LevelInfo,
+		format: "json",
 	}
 }
 
-func newHandlerOptions(level slog.Level, showSource bool) *slog.HandlerOptions {
+func newHandlerOptions(level slog.Level) *slog.HandlerOptions {
 	return &slog.HandlerOptions{
 		Level:       level,
-		AddSource:   showSource,
+		AddSource:   false,
 		ReplaceAttr: nil,
 	}
 }

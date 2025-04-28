@@ -1,12 +1,17 @@
 ---
 log:
   level: debug
-  show_source: false
   format: text
 
 server:
-  ip: 0.0.0.0
-  port: 9900
+  udp:
+    enabled: true
+    ip: 0.0.0.0
+    port: 1514
+  tcp:
+    enabled: true
+    ip: 0.0.0.0
+    port: 1514
 
 loki:
   server: http://127.0.0.1:3100
@@ -14,9 +19,12 @@ loki:
 
 storage:
   log_lifetime: 14d
-  path_to_storage: ./storage
+  path_to_storage: ./aglog.db
 
 messages:
   formats:
-    - '.*(?P<priority>\d+)>(?P<version>\d) (?P<timestamp>[^\s]+) (?P<hostname>[^\s]+) (?P<appname>[^\s]+) (?P<pid>\d+) (?P<level>[^\s]+) (?P<text>.*)'
+    # - '<134>1 2024-11-07T21:44:45.533+0700 huawei agent 255598 INFO [port="50051" caller=":0"] Starting gRPC server'
+    - '<(?P<priority>\d+)>(?P<version>\d) (?P<timestamp>[^\s]+) (?P<hostname>[^\s]+) (?P<appname>[^\s]+) (?P<pid>\d+) (?P<level>[^\s]+) (?P<text>.*)'
+    # - '.*(?P<source_ip>(?:[0-9]{1,3}\.){3}[0-9]{1,3}) - - (?P<timestamp>.*) \"(?P<http_method>[^\s]+) (?P<endpoint>[^\s]+) (?P<proto>[^\s]+)\" (?P<status>(\d+)) (?P<resp_size>\d+) \"(?P<referer>[^\s]+)\" \"(?P<user_agent>.*)\"'
+    # - '.*(?P<timestamp>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) (?P<level>[a-zA-Z]*) (\d+#\d+:) \*(?P<req_id>\d+) (?P<message>.*)'
 

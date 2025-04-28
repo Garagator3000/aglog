@@ -26,10 +26,7 @@ func main() {
 	logger := log.NewLog(log.WithLevel(conf.Log.Level), log.WithFormat(conf.Log.Format))
 	lokiClient := loki.NewClient(conf.Loki.Server, loki.WithTimeout(conf.Loki.Timeout))
 	messageQueue := queue.NewSqliteQueue(conf.Storage.PathToStorage, logger)
-	udpServer := server.NewUdpServer(conf.Server.IP, conf.Server.Port, logger)
-
-	var servers []server.Server
-	servers = append(servers, udpServer)
+	servers := server.NewServers(conf.Server, logger)
 
 	formats := generateFormats(conf.Messages.Formats)
 
@@ -39,7 +36,7 @@ func main() {
 	go worker.ListenMessages(ctx, servers, logger, messageQueue)
 	go worker.Work(ctx, lokiClient, messageQueue, logger, formats)
 
-	go gracefulShutdown(exitChan, cancel, udpServer.Stop, messageQueue.Close)
+	go gracefulShutdown(exitChan, servers, cancel, messageQueue.Close)
 
 	<-exitChan
 }
@@ -54,13 +51,17 @@ func generateFormats(formats []string) map[string]*regexp.Regexp {
 	return compiledFormats
 }
 
-func gracefulShutdown(exitChan chan struct{}, cancels ...func()) {
+func gracefulShutdown(exitChan chan struct{}, servers []server.Server, cancels ...func()) {
 	exit := make(chan os.Signal, 1)
 	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
 	<-exit
 
 	for _, cancel := range cancels {
 		cancel()
+	}
+
+	for _, srv := range servers {
+		srv.Stop()
 	}
 
 	exitChan <- struct{}{}
